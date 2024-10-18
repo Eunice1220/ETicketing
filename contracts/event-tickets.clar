@@ -47,3 +47,22 @@
     (let ((current-count (get-event-count)))
         (map-set event-counter u0 (+ current-count u1))
         (+ current-count u1)))
+
+;; Public Functions
+(define-public (create-event (name (string-ascii 100))
+                           (description (string-ascii 500))
+                           (venue (string-ascii 100))
+                           (date uint)
+                           (price uint)
+                           (total-supply uint))
+    (let ((event-id (increment-event-count)))
+        (map-set events event-id
+            { name: name,
+              description: description,
+              venue: venue,
+              date: date,
+              price: price,
+              total-supply: total-supply,
+              tickets-sold: u0,
+              organizer: tx-sender })
+        (ok event-id)))
