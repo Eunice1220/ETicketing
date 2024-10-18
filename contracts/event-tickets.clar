@@ -35,3 +35,15 @@
       status: (string-ascii 20) }) ;; "active", "used", "cancelled"
 
 (define-map event-counter uint uint)
+
+;; Private Functions
+(define-private (is-owner)
+    (is-eq tx-sender contract-owner))
+
+(define-private (get-event-count)
+    (default-to u0 (map-get? event-counter u0)))
+
+(define-private (increment-event-count)
+    (let ((current-count (get-event-count)))
+        (map-set event-counter u0 (+ current-count u1))
+        (+ current-count u1)))
