@@ -66,3 +66,18 @@
               tickets-sold: u0,
               organizer: tx-sender })
         (ok event-id)))
+
+(define-public (purchase-ticket (event-id uint))
+    (let ((event (unwrap! (map-get? events event-id) err-not-found))
+          (ticket-id (+ (get-event-count) (default-to u0 (get tickets-sold event-id)))))
+        (asserts! (<= (+ (get tickets-sold event) u1) (get total-supply event)) err-sold-out)
+        (try! (stx-transfer? (get price event) tx-sender (get organizer event)))
+        (try! (nft-mint? event-ticket ticket-id tx-sender))
+        (map-set tickets ticket-id
+            { event-id: event-id,
+              owner: tx-sender,
+              status: "active" })
+        (map-set events event-id
+            (merge event { tickets-sold: (+ (get tickets-sold event) u1) }))
+        (ok ticket-id)))
+
