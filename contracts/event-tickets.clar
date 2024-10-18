@@ -81,3 +81,20 @@
             (merge event { tickets-sold: (+ (get tickets-sold event) u1) }))
         (ok ticket-id)))
 
+
+(define-public (transfer-ticket (ticket-id uint) (recipient principal))
+    (let ((ticket (unwrap! (map-get? tickets ticket-id) err-not-found))
+          (event (unwrap! (map-get? events (get event-id ticket)) err-not-found)))
+        (asserts! (is-eq (get owner ticket) tx-sender) err-unauthorized)
+        (asserts! (is-eq (get status ticket) "active") err-unauthorized)
+        ;; Calculate and pay royalty
+        (try! (stx-transfer?
+            (/ (* (get price event) (var-get royalty-percentage)) u100)
+            tx-sender
+            (get organizer event)))
+        ;; Transfer NFT
+        (try! (nft-transfer? event-ticket ticket-id tx-sender recipient))
+        ;; Update ticket ownership
+        (map-set tickets ticket-id
+            (merge ticket { owner: recipient }))
+        (ok true)))
