@@ -98,3 +98,32 @@
         (map-set tickets ticket-id
             (merge ticket { owner: recipient }))
         (ok true)))
+
+(define-public (use-ticket (ticket-id uint))
+    (let ((ticket (unwrap! (map-get? tickets ticket-id) err-not-found)))
+        (asserts! (is-eq (get owner ticket) tx-sender) err-unauthorized)
+        (asserts! (is-eq (get status ticket) "active") err-unauthorized)
+        (map-set tickets ticket-id
+            (merge ticket { status: "used" }))
+        (ok true)))
+
+;; Read-Only Functions
+(define-read-only (get-event (event-id uint))
+    (map-get? events event-id))
+
+(define-read-only (get-ticket (ticket-id uint))
+    (map-get? tickets ticket-id))
+
+(define-read-only (get-ticket-owner (ticket-id uint))
+    (get owner (unwrap! (map-get? tickets ticket-id) err-not-found)))
+
+(define-read-only (get-tickets-sold (event-id uint))
+    (get tickets-sold (unwrap! (map-get? events event-id) err-not-found)))
+
+;; Administrative Functions
+(define-public (set-royalty-percentage (new-percentage uint))
+    (begin
+        (asserts! (is-owner) err-owner-only)
+        (var-set royalty-percentage new-percentage)
+        (ok true)))
+
